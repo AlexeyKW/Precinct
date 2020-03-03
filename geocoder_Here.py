@@ -18,7 +18,7 @@ import re
 geocoderApi = herepy.GeocoderApi('api-key')
 
 
-# In[116]:
+# In[1]:
 
 
 get_ipython().run_line_magic('time', '')
@@ -65,12 +65,46 @@ for line in parse_file:
         except IndexError:
             lon = 0
         paragraphs.append(str(curr_precinct_number)+','+curr_precinct_place+','+str(curr_precinct_place_lat)+','+str(curr_precinct_place_lon)+','+parts[1].rstrip()+','+str(lat)+','+str(lon))
-    if i == 200:
-        break
+    if parts[0] == 'Address_side':
+        response = geocoderApi.free_form('Новосибирск переулок'+parts[1].rstrip())
+        #print(parts[1].rstrip())
+        res_dict = response.as_dict()
+        try:
+            lat = res_dict['Response']['View'][0]['Result'][0]['Location']['NavigationPosition'][0]['Latitude']
+        except IndexError:
+            lat = 0
+        try:
+            lon = res_dict['Response']['View'][0]['Result'][0]['Location']['NavigationPosition'][0]['Longitude']
+        except IndexError:
+            lon = 0
+        paragraphs.append(str(curr_precinct_number)+','+curr_precinct_place+','+str(curr_precinct_place_lat)+','+str(curr_precinct_place_lon)+','+parts[1].rstrip()+','+str(lat)+','+str(lon))
+    if parts[0] == 'Address_avenue':
+        response = geocoderApi.free_form('Новосибирск Проспект '+parts[1].rstrip())
+        #print(parts[1].rstrip())
+        res_dict = response.as_dict()
+        try:
+            lat = res_dict['Response']['View'][0]['Result'][0]['Location']['NavigationPosition'][0]['Latitude']
+        except IndexError:
+            lat = 0
+        try:
+            lon = res_dict['Response']['View'][0]['Result'][0]['Location']['NavigationPosition'][0]['Longitude']
+        except IndexError:
+            lon = 0
+        paragraphs.append(str(curr_precinct_number)+','+curr_precinct_place+','+str(curr_precinct_place_lat)+','+str(curr_precinct_place_lon)+','+parts[1].rstrip()+','+str(lat)+','+str(lon))
+    #if i == 200:
+    #    break
+    if i%1000 == 0:
+        print(i)
 
 with io.open('parse_result_lat_lon.csv',"w", encoding="utf-8") as textFile:
     for paragraph in paragraphs: 
         textFile.write((paragraph)+'\n')
 
 parse_file.close()
+
+
+# In[ ]:
+
+
+
 
