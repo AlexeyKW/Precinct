@@ -48,7 +48,7 @@ def convertDocxToText(path):
 convertDocxToText(path)
 
 
-# In[42]:
+# In[14]:
 
 
 qbfile = open(curr_file, "r", encoding='utf-8')
@@ -65,6 +65,7 @@ for aline in qbfile:
             precinct_place_flag = 0
             precinct_place = precinct_place_text.split('–')
             paragraphs.append('Precinct_place,'+precinct_place[1].replace(')', ''))
+            paragraphs.append('Precinct_address,'+precinct_place[1].replace(')', '').partition('»,')[2])
             precinct_place_text = ''
         else:
             precinct_place_text = precinct_place_text+aline.rstrip()+' '
@@ -111,6 +112,7 @@ for aline in qbfile:
         sum_count = aline.split('-')
         sum_count[1] = re.sub('[^A-Za-z0-9]+', '', sum_count[1])
         paragraphs.append('Township_count,'+sum_count[1])
+        
     if 'Количество избирательных участков –' in aline:
         sum_count = aline.split('–')
         sum_count[1] = re.sub('[^A-Za-z0-9]+', '', sum_count[1])
@@ -128,19 +130,25 @@ for aline in qbfile:
             address_text = aline.partition('Улицы:')[2].rstrip()
             streets = address_text.split(';')
             for street in streets:
+                #print(street)
                 if ',' in street:
                     street_parts = street.split(',')
                     street_name = street_parts[0]
                     if '–' in street_parts[0]:
                         street_name = street_parts[0].split('–')[0]
-                        
+                        #print(street_parts[0])
                         if 'нечетная' in street_parts[0].split('–')[1] or 'четная' in street_parts[0].split('–')[1]:
                                     if 'нечетная' in street_parts[0].split('–')[1] and ' четная' not in street_parts[0].split('–')[1]:
                                         begin = 0
                                         end = 0
                                         odd_parts = street_parts[0].split('–')[1].partition('нечетная')
+                                        div_postfix = ''
                                         #street_name = odd_parts[0]
                                         for number_part in odd_parts[2].split(' '):
+                                            if '/' in number_part:
+                                                div_parts = number_part.split('/')
+                                                number_part = div_parts[0]
+                                                div_postfix = div_parts[1]  
                                             number_part = re.sub('[^A-Za-z0-9]+', '', number_part)
                                             if number_part.isdigit() and begin == 0:
                                                 begin = int(number_part.strip())
@@ -149,16 +157,27 @@ for aline in qbfile:
                                         if begin != 0 and end != 0 and begin != end:
                                             for i in range(begin, end+1, 2):
                                                 paragraphs.append('Address_street,'+street_name+' '+str(i))
+                                        if div_postfix != '':
+                                            paragraphs.append('Address_street,'+street_name+' '+str(end)+'/'+div_postfix)
                                         if begin != 0 and (end == 0 or begin==end):
                                             #for i in range(begin, end+1):
                                             paragraphs.append('Address_street,'+street_name+' '+str(begin)+' odd to end')
+                                        #if begin == 0 and end == 0 and street_parts[0].endswith('нечетная'):
+                                        #    print(street_parts[0])
+                                        #    paragraphs.append('Address_street,'+street_name+' '+' odd from start to end')
+                                        
                                     if ' четная' in street_parts[0].split('–')[1] and 'нечетная' not in street_parts[0].split('–')[1]:
                                         begin = 0
                                         end = 0
                                         even_parts = street_parts[0].split('–')[1].partition(' четная')
                                         #print(even_parts[2])
                                         #street_name = even_parts[0]
+                                        div_postfix = ''
                                         for number_part in even_parts[2].split(' '):
+                                            if '/' in number_part:
+                                                div_parts = number_part.split('/')
+                                                number_part = div_parts[0]
+                                                div_postfix = div_parts[1]  
                                             number_part = re.sub('[^A-Za-z0-9]+', '', number_part)
                                             if number_part.isdigit() and begin == 0:
                                                 begin = int(number_part.strip())
@@ -167,19 +186,30 @@ for aline in qbfile:
                                         if begin != 0 and end != 0 and begin != end:
                                             for i in range(begin, end+1, 2):
                                                 paragraphs.append('Address_street,'+street_name+' '+str(i))
+                                        if div_postfix != '':
+                                            paragraphs.append('Address_street,'+street_name+' '+str(end)+'/'+div_postfix)
                                         if begin != 0 and (end == 0 or begin==end):
                                             #for i in range(begin, end+1):
                                             paragraphs.append('Address_street,'+street_name+' '+str(begin)+' even to end')
+                                        #if begin == 0 and end == 0 and street_parts[0].endswith('четная'):
+                                        #    print(street_parts[0])
+                                        #    paragraphs.append('Address_street,'+street_name+' '+' even from start to end')
                         
                     for street_part in street_parts:
                             if street_part != street_parts[0]:
                                 if 'нечетная' in street_part or 'четная' in street_part:
+                                    #print()
                                     if 'нечетная' in street_part and ' четная' not in street_part:
                                         begin = 0
                                         end = 0
                                         odd_parts = street_part.partition('нечетная')
                                         #street_name = odd_parts[0]
+                                        div_postfix = ''
                                         for number_part in odd_parts[2].split(' '):
+                                            if '/' in number_part:
+                                                div_parts = number_part.split('/')
+                                                number_part = div_parts[0]
+                                                div_postfix = div_parts[1]
                                             number_part = re.sub('[^A-Za-z0-9]+', '', number_part)
                                             if number_part.isdigit() and begin == 0:
                                                 begin = int(number_part.strip())
@@ -188,16 +218,25 @@ for aline in qbfile:
                                         if begin != 0 and end != 0 and begin != end:
                                             for i in range(begin, end+1, 2):
                                                 paragraphs.append('Address_street,'+street_name+' '+str(i))
+                                        if div_postfix != '':
+                                            paragraphs.append('Address_street,'+street_name+' '+str(end)+'/'+div_postfix)
                                         if begin != 0 and (end == 0 or begin==end):
                                             #for i in range(begin, end+1):
-                                            paragraphs.append('Address_street,'+street_name+' '+str(begin)+'odd to end')
+                                            paragraphs.append('Address_street,'+street_name+' '+str(begin)+' odd to end')
+                                            #print(street_parts[0])
+
                                     if ' четная' in street_part and 'нечетная' not in street_part:
                                         begin = 0
                                         end = 0
                                         even_parts = street_part.partition(' четная')
                                         #print(even_parts[2])
                                         #street_name = even_parts[0]
+                                        div_postfix = ''
                                         for number_part in even_parts[2].split(' '):
+                                            if '/' in number_part:
+                                                div_parts = number_part.split('/')
+                                                number_part = div_parts[0]
+                                                div_postfix = div_parts[1]                                            
                                             number_part = re.sub('[^A-Za-z0-9]+', '', number_part)
                                             if number_part.isdigit() and begin == 0:
                                                 begin = int(number_part.strip())
@@ -206,28 +245,162 @@ for aline in qbfile:
                                         if begin != 0 and end != 0 and begin != end:
                                             for i in range(begin, end+1, 2):
                                                 paragraphs.append('Address_street,'+street_name+' '+str(i))
+                                        if div_postfix != '':
+                                            paragraphs.append('Address_street,'+street_name+' '+str(end)+'/'+div_postfix)
                                         if begin != 0 and (end == 0 or begin==end):
                                             #for i in range(begin, end+1):
                                             paragraphs.append('Address_street,'+street_name+' '+str(begin)+' even to end')
                                 else:
                                     paragraphs.append('Address_street,'+street_parts[0]+street_part)
                 else:
-                    paragraphs.append('Address_street,'+street)
+                    if street.endswith('нечетная'):
+                        street_name = street.split('–')[0]
+                        paragraphs.append('Address_street,'+street_name+' odd from start to end')
+                    elif street.endswith(' четная'):
+                        street_name = street.split('–')[0]
+                        paragraphs.append('Address_street,'+street_name+' even from start to end')
+                    else:
+                        if 'нечетная' in street or 'четная' in street:
+                            street_name = street.split('–')[0]
+                                    #print()
+                            if 'нечетная' in street and ' четная' not in street:
+                                        begin = 0
+                                        end = 0
+                                        odd_parts = street.partition('нечетная')
+                                        #street_name = odd_parts[0]
+                                        div_postfix = ''
+                                        for number_part in odd_parts[2].split(' '):
+                                            if '/' in number_part:
+                                                div_parts = number_part.split('/')
+                                                number_part = div_parts[0]
+                                                div_postfix = div_parts[1]
+                                            number_part = re.sub('[^A-Za-z0-9]+', '', number_part)
+                                            if number_part.isdigit() and begin == 0:
+                                                begin = int(number_part.strip())
+                                            if number_part.isdigit() and begin != 0:
+                                                end = int(number_part.strip())
+                                        if begin != 0 and end != 0 and begin != end:
+                                            for i in range(begin, end+1, 2):
+                                                paragraphs.append('Address_street,'+street_name+' '+str(i))
+                                        if div_postfix != '':
+                                            paragraphs.append('Address_street,'+street_name+' '+str(end)+'/'+div_postfix)
+                                        if begin != 0 and (end == 0 or begin==end):
+                                            #for i in range(begin, end+1):
+                                            paragraphs.append('Address_street,'+street_name+' '+str(begin)+' odd to end')
+                                            #print(street_parts[0])
+
+                            if ' четная' in street and 'нечетная' not in street:
+                                        begin = 0
+                                        end = 0
+                                        even_parts = street.partition(' четная')
+                                        #print(even_parts[2])
+                                        #street_name = even_parts[0]
+                                        div_postfix = ''
+                                        for number_part in even_parts[2].split(' '):
+                                            if '/' in number_part:
+                                                div_parts = number_part.split('/')
+                                                number_part = div_parts[0]
+                                                div_postfix = div_parts[1]                                            
+                                            number_part = re.sub('[^A-Za-z0-9]+', '', number_part)
+                                            if number_part.isdigit() and begin == 0:
+                                                begin = int(number_part.strip())
+                                            if number_part.isdigit() and begin != 0:
+                                                end = int(number_part.strip())
+                                        if begin != 0 and end != 0 and begin != end:
+                                            for i in range(begin, end+1, 2):
+                                                paragraphs.append('Address_street,'+street_name+' '+str(i))
+                                        if div_postfix != '':
+                                            paragraphs.append('Address_street,'+street_name+' '+str(end)+'/'+div_postfix)
+                                        if begin != 0 and (end == 0 or begin==end):
+                                            #for i in range(begin, end+1):
+                                            paragraphs.append('Address_street,'+street_name+' '+str(begin)+' even to end')
         elif 'Улица' in aline:
             address_text = aline.partition('Улица')[2].rstrip()
             if ',' in address_text:
-                street_parts = street.split(',')
+                #print(aline)
+                street_parts = address_text.split(',')
                 for street_part in street_parts:
                     if street_part != street_parts[0]:
+                        #print(street_part)
                         paragraphs.append('Address_street,'+street_parts[0]+street_part)
+        elif 'Границы участка – Проспект' in aline:
+            address_text = aline.partition('Проспект')[2].rstrip()
+            if ',' in address_text:
+                #print(aline)
+                street_parts = address_text.split(',')
+                for street_part in street_parts:
+                    if street_part != street_parts[0]:
+                        if '–' in street_part:
+                            street_name = street_part.split('–')[0]
+                            if 'нечетная' in street_part.split('–')[1] or 'четная' in street_part.split('–')[1]:
+                                    if 'нечетная' in street_part.split('–')[1] and ' четная' not in street_part.split('–')[1]:
+                                        begin = 0
+                                        end = 0
+                                        odd_parts = street_part.split('–')[1].partition('нечетная')
+                                        div_postfix = ''
+                                        #street_name = odd_parts[0]
+                                        for number_part in odd_parts[2].split(' '):
+                                            if '/' in number_part:
+                                                div_parts = number_part.split('/')
+                                                number_part = div_parts[0]
+                                                div_postfix = div_parts[1]  
+                                            number_part = re.sub('[^A-Za-z0-9]+', '', number_part)
+                                            if number_part.isdigit() and begin == 0:
+                                                begin = int(number_part.strip())
+                                            if number_part.isdigit() and begin != 0:
+                                                end = int(number_part.strip())
+                                        if begin != 0 and end != 0 and begin != end:
+                                            for i in range(begin, end+1, 2):
+                                                paragraphs.append('Address_avenue,'+street_name+' '+str(i))
+                                        if div_postfix != '':
+                                            paragraphs.append('Address_avenue,'+street_name+' '+str(end)+'/'+div_postfix)
+                                        if begin != 0 and (end == 0 or begin==end):
+                                            #for i in range(begin, end+1):
+                                            paragraphs.append('Address_avenue,'+street_name+' '+str(begin)+' odd to end')
+                                        #if begin == 0 and end == 0 and street_parts[0].endswith('нечетная'):
+                                        #    print(street_parts[0])
+                                        #    paragraphs.append('Address_street,'+street_name+' '+' odd from start to end')
+                                        
+                                    if ' четная' in street_parts[0].split('–')[1] and 'нечетная' not in street_parts[0].split('–')[1]:
+                                        begin = 0
+                                        end = 0
+                                        even_parts = street_parts[0].split('–')[1].partition(' четная')
+                                        #print(even_parts[2])
+                                        #street_name = even_parts[0]
+                                        div_postfix = ''
+                                        for number_part in even_parts[2].split(' '):
+                                            if '/' in number_part:
+                                                div_parts = number_part.split('/')
+                                                number_part = div_parts[0]
+                                                div_postfix = div_parts[1]  
+                                            number_part = re.sub('[^A-Za-z0-9]+', '', number_part)
+                                            if number_part.isdigit() and begin == 0:
+                                                begin = int(number_part.strip())
+                                            if number_part.isdigit() and begin != 0:
+                                                end = int(number_part.strip())
+                                        if begin != 0 and end != 0 and begin != end:
+                                            for i in range(begin, end+1, 2):
+                                                paragraphs.append('Address_avenue,'+street_name+' '+str(i))
+                                        if div_postfix != '':
+                                            paragraphs.append('Address_avenue,'+street_name+' '+str(end)+'/'+div_postfix)
+                                        if begin != 0 and (end == 0 or begin==end):
+                                            #for i in range(begin, end+1):
+                                            paragraphs.append('Address_avenue,'+street_name+' '+str(begin)+' even to end')
+                                        #if begin == 0 and end == 0 and street_parts[0].endswith('четная'):
+                                        #    print(street_parts[0])
+                                        #    paragraphs.append('Address_street,'+street_name+' '+' even from start to end')
+                        #print(street_part)
+                        paragraphs.append('Address_avenue,'+street_parts[0]+street_part)
         else:
             address_text = aline.split('–')[1]
+            
             if ',' in address_text:
                 street_parts = street.split(',')
                 for street_part in street_parts:
                     if street_part != street_parts[0]:
-                        paragraphs.append('Address_street,'+street_parts[0]+street_part)
+                        paragraphs.append('Address_street,'+street_parts[0]+' '+street_part)
             paragraphs.append('Address_street,'+address_text)
+        
         
     if 'переул' in aline:
         if 'переулок' in aline:
