@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[2]:
 
 
 from docx import Document
@@ -12,19 +12,19 @@ import sys
 import re
 
 
-# In[2]:
+# In[3]:
 
 
 path = "docx/"
 
 
-# In[3]:
+# In[4]:
 
 
 curr_file = ""
 
 
-# In[4]:
+# In[5]:
 
 
 def convertDocxToText(path):
@@ -42,13 +42,13 @@ def convertDocxToText(path):
                     textFile.write((para.text)+'\n')
 
 
-# In[5]:
+# In[7]:
 
 
 convertDocxToText(path)
 
 
-# In[14]:
+# In[9]:
 
 
 qbfile = open(curr_file, "r", encoding='utf-8')
@@ -314,6 +314,8 @@ for aline in qbfile:
                                         if begin != 0 and (end == 0 or begin==end):
                                             #for i in range(begin, end+1):
                                             paragraphs.append('Address_street,'+street_name+' '+str(begin)+' even to end')
+                        else:
+                            paragraphs.append('Address_street,'+street)
         elif 'Улица' in aline:
             address_text = aline.partition('Улица')[2].rstrip()
             if ',' in address_text:
