@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[2]:
+# In[1]:
 
 
 from docx import Document
@@ -12,19 +12,19 @@ import sys
 import re
 
 
-# In[3]:
+# In[2]:
 
 
 path = "docx/"
 
 
-# In[4]:
+# In[3]:
 
 
 curr_file = ""
 
 
-# In[5]:
+# In[4]:
 
 
 def convertDocxToText(path):
@@ -42,13 +42,13 @@ def convertDocxToText(path):
                     textFile.write((para.text)+'\n')
 
 
-# In[6]:
+# In[5]:
 
 
 convertDocxToText(path)
 
 
-# In[7]:
+# In[35]:
 
 
 def object_type(p_type):
@@ -58,6 +58,8 @@ def object_type(p_type):
     elif 'Улицы' == p_type:
         object_string = 'Address_street, улица'
     elif 'Улица' == p_type:
+        object_string = 'Address_street, улица'
+    elif 'улица' == p_type:
         object_string = 'Address_street, улица'
     elif '– Проспект' == p_type:
         object_string = 'Address_street, проспект'
@@ -71,12 +73,20 @@ def object_type(p_type):
         object_string = 'Address_street,'
     elif '– Площадь' == p_type:
         object_string = 'Address_street, площадь'
+    elif 'проезды' == p_type:
+        object_string = 'Address_street, проезд'
+    elif 'тупик ' == p_type:
+        object_string = 'Address_street, тупик'
+    elif 'тупики' == p_type:
+        object_string = 'Address_street, тупик'
+    elif 'бульвар ' == p_type:
+        object_string = 'Address_street, бульвар '
     else:
         object_string = 'none'
     return object_string
 
 
-# In[33]:
+# In[37]:
 
 
 qbfile = open(curr_file, "r", encoding='utf-8')
@@ -168,6 +178,8 @@ for aline in qbfile:
         parse_type = 'Улицы'
     elif 'Улица' in aline:
         parse_type = 'Улица'
+    elif 'улица' in aline:
+        parse_type = 'улица'
     elif '– Проспект' in aline:
         parse_type = '– Проспект'
     elif 'переулок' in aline:
@@ -180,11 +192,19 @@ for aline in qbfile:
         parse_type = 'территории'
     elif '– Площадь' in aline:
         parse_type = '– Площадь'
+    elif 'тупик ' in aline:
+        parse_type = 'тупик'
+    elif 'тупики' in aline:
+        parse_type = 'тупики'
+    elif 'проезды' in aline:
+        parse_type = 'проезды'
+    elif 'бульвар ' in aline:
+        parse_type = 'бульвар '
     else:
         parse_type = 'none'
     
     if parse_type != 'none':
-        address_text = aline.partition(parse_type)[2].rstrip()
+        address_text = aline.rpartition(parse_type)[2].rstrip()
         #print (address_text)
         if address_text != '':
             #print(address_text)
@@ -199,7 +219,7 @@ for aline in qbfile:
             for street in streets:
                 #print (street)
                 if street != '':
-                    if ',' in street or 'нечетная' in street or ' четная' in street:
+                    if ',' in street or 'нечетная' in street or ' четная' in street or (' с ' in street and ' по ' in street):
                         #print (street)
                         if ',' in street:
                             street_parts = street.split(',')
@@ -218,31 +238,55 @@ for aline in qbfile:
                         for street_part in street_parts:
                             #print(street_part)
                             odd_even_flag = 'none'
-                            if 'нечетная' in street_part or ' четная' in street_part:
+                            if 'нечетная' in street_part or ' четная' in street_part or (' с ' in street_part and ' по ' in street_part):
                                 #print(street_name+street_part)
                                 if 'нечетная' in street_part and ' четная' not in street_part:
                                     odd_even_flag = 'нечетная'
                                 if ' четная' in street_part and 'нечетная' not in street_part:
                                     odd_even_flag = ' четная'
-                                parts = street_part.partition(odd_even_flag)[2]
-                                div_postfix = ''
+                                if odd_even_flag != 'none':
+                                    parts = street_part.partition(odd_even_flag)[2]
+                                else:
+                                    parts = street_part
+                                begin_div_postfix = ''
+                                end_div_postfix = ''
                                 begin = 0
+                                begin_postfix = ''
                                 end = 0
+                                end_postfix = ''
                                 for number_part in parts.split(' '):
                                     if '/' in number_part:
                                         div_parts = number_part.split('/')
                                         number_part = div_parts[0]
-                                        div_postfix = div_parts[1]
+                                        if begin == 0:
+                                            begin_div_postfix = div_parts[1]
+                                        if begin != 0:
+                                            end_div_postfix = div_parts[1]
+                                    number_part_postfix_check = number_part
                                     number_part = re.sub('[^A-Za-z0-9]+', '', number_part)
                                     if number_part.isdigit() and begin == 0:
                                         begin = int(number_part.strip())
+                                        if re.search(r'[а-яА-Я]', number_part_postfix_check[-1]):
+                                            begin_postfix = number_part_postfix_check[-1]
                                     if number_part.isdigit() and begin != 0:
                                         end = int(number_part.strip())
+                                        if re.search(r'[а-яА-Я]', number_part_postfix_check[-1]):
+                                            end_postfix = number_part_postfix_check[-1]
+                                if begin_postfix != '':
+                                    paragraphs.append(object_type_str+street_name+' '+str(begin)+begin_postfix)
+                                if begin_div_postfix != '':
+                                    paragraphs.append(object_type_str+street_name+' '+str(begin)+'/'+begin_div_postfix)
                                 if begin != 0 and end != 0 and begin != end:
-                                        for i in range(begin, end+1, 2):
-                                            paragraphs.append(object_type_str+street_name+' '+str(i))
-                                if div_postfix != '':
-                                            paragraphs.append(object_type_str+street_name+' '+str(end)+'/'+div_postfix)
+                                        if odd_even_flag != 'none':
+                                            for i in range(begin, end+1, 2):
+                                                paragraphs.append(object_type_str+street_name+' '+str(i))
+                                        else:
+                                            for i in range(begin, end+1, 1):
+                                                paragraphs.append(object_type_str+street_name+' '+str(i))
+                                if end_div_postfix != '':
+                                    paragraphs.append(object_type_str+street_name+' '+str(end)+'/'+end_div_postfix)
+                                if end_postfix != '':
+                                    paragraphs.append(object_type_str+street_name+' '+str(end)+end_postfix)
                                 if begin != 0 and (end == 0 or begin==end):
                                             #for i in range(begin, end+1):
                                         if odd_even_flag == ' четная':
@@ -263,4 +307,7 @@ with io.open('parse_result_2.csv',"w", encoding="utf-8") as textFile:
     for paragraph in paragraphs: 
         textFile.write((paragraph)+'\n')
 qbfile.close()
+
+
+
 
