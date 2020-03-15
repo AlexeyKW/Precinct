@@ -95,10 +95,10 @@ def object_type(p_type):
 # In[6]:
 
 
-curr_file = "nsk.txt"
+curr_file = "iskitim.txt"
 
 
-# In[8]:
+# In[19]:
 
 
 qbfile = open(curr_file, "r", encoding='utf-8')
@@ -263,7 +263,7 @@ for aline in qbfile:
                             street_name = street_parts[0].split('–')[0]
                             street_parts[0] = street_parts[0].split('–')[1]
                         else:
-                            print(street_parts[0])
+                            #print(street_parts[0])
                             #if len(street_parts[0])>5 and street_name_parts[-1].strip().isdigit():
                             #if len(street_parts[0])>5:
                             #    #print(street_parts[0])
@@ -344,7 +344,7 @@ for aline in qbfile:
                                 paragraphs.append(object_type_str+street_name+' '+street_part)
                     else:
                         paragraphs.append(object_type_str+street) 
-with io.open('parse_result_2.csv',"w", encoding="utf-8") as textFile:
+with io.open('parse_result_2_iskitim.csv',"w", encoding="utf-8") as textFile:
     for paragraph in paragraphs: 
         textFile.write((paragraph)+'\n')
 qbfile.close()

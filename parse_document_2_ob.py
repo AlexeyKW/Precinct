@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[5]:
 
 
 from docx import Document
@@ -12,7 +12,7 @@ import sys
 import re
 
 
-# In[2]:
+# In[6]:
 
 
 path = "docx/"
@@ -48,7 +48,7 @@ def convertDocxToText(path):
 convertDocxToText(path)
 
 
-# In[5]:
+# In[1]:
 
 
 def object_type(p_type):
@@ -66,6 +66,8 @@ def object_type(p_type):
     elif 'переулок' == p_type:
         object_string = 'Address_side, переулок '
     elif 'переулки' == p_type:
+        object_string = 'Address_side, переулок '
+    elif 'Переулки' == p_type:
         object_string = 'Address_side, переулок '
     elif 'территория' == p_type:
         object_string = 'Address_place, '
@@ -92,13 +94,13 @@ def object_type(p_type):
     return object_string
 
 
-# In[6]:
+# In[3]:
 
 
-curr_file = "nsk.txt"
+curr_file = "ob.txt"
 
 
-# In[8]:
+# In[7]:
 
 
 qbfile = open(curr_file, "r", encoding='utf-8')
@@ -210,6 +212,8 @@ for aline in qbfile:
         parse_type = 'переулок'
     elif 'переулки' in aline:
         parse_type = 'переулки'
+    elif 'Переулки' in aline:
+        parse_type = 'переулки'
     elif 'территория' in aline:
         parse_type = 'территория'
     elif 'территории' in aline:
@@ -234,7 +238,7 @@ for aline in qbfile:
         parse_type = 'none'
     
     if parse_type != 'none':
-        address_text = aline.rpartition(parse_type)[2].rstrip()
+        address_text = aline.rpartition(parse_type)[2].rstrip().replace("№", "")
         #print (address_text)
         if address_text != '':
             #print(address_text)
@@ -263,19 +267,19 @@ for aline in qbfile:
                             street_name = street_parts[0].split('–')[0]
                             street_parts[0] = street_parts[0].split('–')[1]
                         else:
-                            print(street_parts[0])
+                            #print(street_parts[0])
                             #if len(street_parts[0])>5 and street_name_parts[-1].strip().isdigit():
-                            #if len(street_parts[0])>5:
-                            #    #print(street_parts[0])
-                            #    street_name_parts = street_parts[0].strip().split(' ')
-                            #    street_name = " ".join(street_name_parts[:-1])
-                            #    #print(street_name)
-                            #    #print(street_name_parts[-1])
-                            #    street_parts = [street_name_parts[-1]]+street_parts[1:]
-                            #    #print(street_parts)
-                            #else:
-                            street_name = street_parts[0]
-                            street_parts = street_parts[1:]
+                            if len(street_parts[0])>5:
+                                #print(street_parts[0])
+                                street_name_parts = street_parts[0].strip().split(' ')
+                                street_name = " ".join(street_name_parts[:-1])
+                                #print(street_name)
+                                #print(street_name_parts[-1])
+                                street_parts = [street_name_parts[-1]]+street_parts[1:]
+                                #print(street_parts)
+                            else:
+                                street_name = street_parts[0]
+                                street_parts = street_parts[1:]
                         for street_part in street_parts:
                             #print(street_part)
                             odd_even_flag = 'none'
@@ -344,7 +348,7 @@ for aline in qbfile:
                                 paragraphs.append(object_type_str+street_name+' '+street_part)
                     else:
                         paragraphs.append(object_type_str+street) 
-with io.open('parse_result_2.csv',"w", encoding="utf-8") as textFile:
+with io.open('parse_result_2_ob.csv',"w", encoding="utf-8") as textFile:
     for paragraph in paragraphs: 
         textFile.write((paragraph)+'\n')
 qbfile.close()
